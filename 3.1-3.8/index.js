@@ -2,7 +2,7 @@ const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const app = express()
-const PORT = 3001
+const PORT = process.end.PORT || 3001
 const phone_book = require('./data/phone_book.js')
 
 morgan.token('body', (req) => {

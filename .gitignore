@@ -41,7 +41,6 @@ coverage/
 *.db-shm
 dump.rdb
 *.sql
-/data/
 
 # Misc
 .DS_Store

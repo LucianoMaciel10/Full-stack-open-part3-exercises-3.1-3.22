@@ -24,7 +24,6 @@ index.http
 .env.*.local
 
 # Build artifacts
-dist/
 build/
 coverage/
 .out/

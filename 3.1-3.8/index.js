@@ -1,8 +1,14 @@
 const express = require('express')
+const morgan = require('morgan')
 const app = express()
 const PORT = 3001
 const phone_book = require('./data/phone_book.js')
 
+morgan.token('body', (req) => {
+  return req.method === 'POST' ? JSON.stringify(req.body) : ''
+})
+
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms - :body'))
 app.use(express.json())
 
 app.get('/api/persons', (req, res) => {

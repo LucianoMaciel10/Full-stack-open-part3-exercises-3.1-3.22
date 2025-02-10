@@ -1,9 +1,11 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const app = express()
 const PORT = process.env.PORT || 3001
 const phone_book = require('./data/phone_book.js')
+const Person = require('./models/person.js')
 
 morgan.token('body', (req) => {
   return req.method === 'POST' ? JSON.stringify(req.body) : ''
@@ -15,7 +17,9 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms - 
 app.use(express.json())
 
 app.get('/api/persons', (req, res) => {
-  res.json(phone_book)
+  Person.find({}).then(persons => {
+    res.json(persons)
+  })
 })
 
 app.get('/api/persons/:id', (req, res) => {
@@ -41,26 +45,33 @@ app.delete('/api/persons/:id', (req, res) => {
   }
 })
 
-app.post('/api/persons', (req, res) => {
-  const body = req.body
-  const existName = phone_book.find(person => person.name === body.name)
+app.post('/api/persons',async (req, res) => {
+  try {
+    const body = req.body;
 
-  if (existName) {
-    return res.status(400).json({ error: 'name must be unique' })
-  } else if (!body.number) {
-    return res.status(400).json({ error: "The mandatory field 'number' is not found" })
-  } else if (!body.name) {
-    return res.status(400).json({ error: "The mandatory field 'name' is not found" })
+    if (!body.name) {
+      return res.status(400).json({ error: "The mandatory field 'name' is not found" });
+    }
+    if (!body.number) {
+      return res.status(400).json({ error: "The mandatory field 'number' is not found" });
+    }
+
+    const existName = await Person.findOne({ name: body.name });
+
+    if (existName) {
+      return res.status(400).json({ error: 'name must be unique' });
+    }
+
+    const newPerson = new Person({
+      name: body.name,
+      number: body.number
+    });
+
+    const savedPerson = await newPerson.save();
+    res.json(savedPerson);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
   }
-
-  const newPerson = {
-    id: Math.random() * 9999999999,
-    name: body.name,
-    number: body.number
-  }
-
-  phone_book.push(newPerson)
-  res.json(newPerson)
 })
 
 app.get('/info', (req, res) => {

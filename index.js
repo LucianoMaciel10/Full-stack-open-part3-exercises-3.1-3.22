@@ -22,7 +22,7 @@ app.get('/api/persons', (req, res) => {
   })
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
   Person.findById(req.params.id).then(person => {
     if (person) {
       res.json(person);
@@ -30,10 +30,7 @@ app.get('/api/persons/:id', (req, res) => {
       res.status(404).end()
     }
   })
-  .catch(err => {
-    console.log(err);
-    res.status(500).end()
-  });
+  .catch(err => next(err));
 })
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -83,6 +80,19 @@ app.get('/info', (req, res) => {
             <p>${time}</p>`)
 })
 
+app.use((req, res) => {
+  res.status(404).json({ error: 'Unknown endpoint'})
+})
+
+app.use((err, req, res, next) => {
+  console.error(err.message)
+
+  if (err.name === 'CastError') {
+    return res.status(400).json({ error: 'Invalid ID format' })
+  }
+
+  next(err)
+})
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)

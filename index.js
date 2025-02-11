@@ -4,7 +4,6 @@ const morgan = require('morgan')
 const cors = require('cors')
 const app = express()
 const PORT = process.env.PORT || 3001
-const phone_book = require('./data/phone_book.js')
 const Person = require('./models/person.js')
 
 morgan.token('body', (req) => {
@@ -85,10 +84,14 @@ app.post('/api/persons',async (req, res) => {
   }
 })
 
-app.get('/info', (req, res) => {
+app.get('/info', (req, res, next) => {
   const time = new Date()
-  res.send(`<p>Phonebook has info for ${phone_book.length} people</p>
-            <p>${time}</p>`)
+  Person.find({})
+    .then(people => {
+      res.send(`<p>Phonebook has info for ${people.length} people</p>
+                <p>${time}</p>`)
+    })
+    .catch(err => next(err))
 })
 
 app.use((req, res) => {
@@ -100,9 +103,11 @@ app.use((err, req, res, next) => {
 
   if (err.name === 'CastError') {
     return res.status(400).json({ error: 'Invalid ID format' })
+  } else if (err.name === 'ValidationError') {
+    return res.status(400).json({ error: err.message });
   }
 
-  next(err)
+  res.status(500).json({ error: 'Internal server error' });
 })
 
 app.listen(PORT, () => {

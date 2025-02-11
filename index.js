@@ -41,46 +41,34 @@ app.delete('/api/persons/:id', (req, res, next) => {
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
-  const body = req.body
+  const { name, number } = req.body
 
   const person = {
-    name: body.name,
-    number: body.number
+    name,
+    number
   }
 
-  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+  Person.findByIdAndUpdate(
+    req.params.id, 
+    person, 
+    { new: true, runValidators: true, context: 'query' }
+  )
     .then((updatePerson) => {
       res.json(updatePerson)
     })
     .catch(err => next(err))
 })
 
-app.post('/api/persons',async (req, res) => {
+app.post('/api/persons',async (req, res, next) => {
   try {
-    const body = req.body;
+    const { name, number } = req.body;
 
-    if (!body.name) {
-      return res.status(400).json({ error: "The mandatory field 'name' is not found" });
-    }
-    if (!body.number) {
-      return res.status(400).json({ error: "The mandatory field 'number' is not found" });
-    }
-
-    const existName = await Person.findOne({ name: body.name });
-
-    if (existName) {
-      return res.status(400).json({ error: 'name must be unique' });
-    }
-
-    const newPerson = new Person({
-      name: body.name,
-      number: body.number
-    });
+    const newPerson = new Person({ name, number });
 
     const savedPerson = await newPerson.save();
     res.json(savedPerson);
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    next(error)
   }
 })
 
@@ -105,6 +93,8 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ error: 'Invalid ID format' })
   } else if (err.name === 'ValidationError') {
     return res.status(400).json({ error: err.message });
+  } else if (err.name === 'MongoServerError' && err.code === 11000) {
+    return res.status(400).json({ error: 'name must be unique' })
   }
 
   res.status(500).json({ error: 'Internal server error' });

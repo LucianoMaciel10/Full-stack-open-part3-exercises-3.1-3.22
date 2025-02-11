@@ -35,12 +35,25 @@ app.get('/api/persons/:id', (req, res, next) => {
 
 app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndDelete(req.params.id)
-  .then((deletePerson) => {
-    res.json(deletePerson)
-  })
-  .catch(err => {
-    next(err)
-  })
+    .then((deletePerson) => {
+      res.json(deletePerson)
+    })
+    .catch(err => next(err))
+})
+
+app.put('/api/persons/:id', (req, res, next) => {
+  const body = req.body
+
+  const person = {
+    name: body.name,
+    number: body.number
+  }
+
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then((updatePerson) => {
+      res.json(updatePerson)
+    })
+    .catch(err => next(err))
 })
 
 app.post('/api/persons',async (req, res) => {

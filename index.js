@@ -33,16 +33,14 @@ app.get('/api/persons/:id', (req, res, next) => {
   .catch(err => next(err));
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-  const id = req.params.id
-  const index = phone_book.findIndex(p => p.id == id)
-
-  if (index) {
-    phone_book.splice(index, 1)
-    res.status(204).end()
-  } else {
-    res.status(404).end()
-  }
+app.delete('/api/persons/:id', (req, res, next) => {
+  Person.findByIdAndDelete(req.params.id)
+  .then((deletePerson) => {
+    res.json(deletePerson)
+  })
+  .catch(err => {
+    next(err)
+  })
 })
 
 app.post('/api/persons',async (req, res) => {

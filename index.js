@@ -86,7 +86,7 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Unknown endpoint'})
 })
 
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   console.error(err.message)
 
   if (err.name === 'CastError') {
